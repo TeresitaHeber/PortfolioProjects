@@ -145,7 +145,7 @@ FROM PercentPeopleVaccinated
 ORDER BY 2, 3;
 
 
--- Creating Views
+-- Creating Views to store data for later visualizations
 
 DROP VIEW IF EXISTS GlobalTotalCases;
 CREATE VIEW GlobalTotalCases
