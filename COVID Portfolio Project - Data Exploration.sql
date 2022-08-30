@@ -54,14 +54,6 @@ ORDER BY TotalDeathCount DESC;
 
 -- Continents with highest death count per population
 
-SELECT location, MAX(CAST(total_deaths AS UNSIGNED)) AS TotalDeathCount
-FROM portfolio_project.coviddeathscsv
-WHERE continent IS NULL
-GROUP BY location
-ORDER BY TotalDeathCount DESC;
-
--- OR
-
 SELECT continent, MAX(CAST(total_deaths AS UNSIGNED)) AS TotalDeathCount
 FROM portfolio_project.coviddeathscsv
 WHERE continent IS NOT NULL
