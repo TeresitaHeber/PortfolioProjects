@@ -93,8 +93,8 @@ SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinatio
 OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
 FROM portfolio_project.coviddeathscsv AS dea
 INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
-ON dea.location=vac.location
-AND dea.date=vac.date
+  ON dea.location=vac.location
+  AND dea.date=vac.date
 WHERE dea.continent IS NOT NULL
 ORDER BY 2, 3;
 
@@ -109,8 +109,8 @@ SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinatio
 OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
 FROM portfolio_project.coviddeathscsv AS dea
 INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
-ON dea.location=vac.location
-AND dea.date=vac.date
+   ON dea.location=vac.location
+  AND dea.date=vac.date
 WHERE dea.continent IS NOT NULL
 )
 SELECT *, (RollingPeopleVaccinated/population)*100 AS PercentagePeopleVaccinated 
@@ -137,8 +137,8 @@ SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinatio
 OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
 FROM portfolio_project.coviddeathscsv AS dea
 INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
-ON dea.location=vac.location
-AND dea.date=vac.date
+  ON dea.location=vac.location
+  AND dea.date=vac.date
 WHERE dea.continent IS NOT NULL;
 
 SELECT *, (RollingPeopleVaccinated/population)*100 AS PercentagePeopleVaccinated 
