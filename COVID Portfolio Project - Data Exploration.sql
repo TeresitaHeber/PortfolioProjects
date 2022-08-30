@@ -71,26 +71,136 @@ ORDER BY TotalDeathCount DESC;
 
 -- Global numbers: Total cases 
 
-SELECT date, SUM(new_cases) AS TotalCases
+SELECT SUM(new_cases) AS GlobalTotalCases
 FROM portfolio_project.coviddeathscsv
-WHERE continent IS NOT NULL
-GROUP BY date
-ORDER BY 1, 2;
+WHERE continent IS NOT NULL;
+
 
 
 -- Global numbers: Total deaths
 
-SELECT date, SUM(CAST(new_deaths AS UNSIGNED)) AS TotalDeaths
+SELECT SUM(CAST(new_deaths AS UNSIGNED)) AS GlobalTotalDeaths
 FROM portfolio_project.coviddeathscsv
-WHERE continent IS NOT NULL
-GROUP BY date
-ORDER BY 1, 2;
+WHERE continent IS NOT NULL;
 
 
 -- Global numbers: Death percentage
 
-SELECT SUM(new_cases) AS TotalCases, SUM(CAST(new_deaths AS UNSIGNED)) AS TotalDeaths
+SELECT SUM(new_cases) AS GlobalTotalCases, SUM(CAST(new_deaths AS UNSIGNED)) AS GlobalTotalDeaths
 , ((SUM(CAST(new_deaths AS UNSIGNED)))/(SUM(new_cases)))*100 AS DeathPercentage
 FROM portfolio_project.coviddeathscsv
 WHERE continent IS NOT NULL
 ORDER BY 1, 2;
+
+
+-- Total Population vs Vaccinations (using CTE and Temp Table)
+-- Shows Percentage of Population that has recieved at least one Covid Vaccine
+
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(vac.new_vaccinations, UNSIGNED)) 
+OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
+FROM portfolio_project.coviddeathscsv AS dea
+INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
+ON dea.location=vac.location
+AND dea.date=vac.date
+WHERE dea.continent IS NOT NULL
+ORDER BY 2, 3;
+
+
+-- Using CTE
+
+WITH PopvsVac (continent, location, date, population, new_vaccinations, RollingPeopleVaccinated)
+AS
+(
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(vac.new_vaccinations, UNSIGNED)) 
+OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
+FROM portfolio_project.coviddeathscsv AS dea
+INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
+ON dea.location=vac.location
+AND dea.date=vac.date
+WHERE dea.continent IS NOT NULL
+)
+SELECT *, (RollingPeopleVaccinated/population)*100 AS PercentagePeopleVaccinated 
+FROM PopvsVac
+ORDER BY 2, 3;
+
+
+-- Using Temp Table
+
+
+DROP TABLE IF EXISTS PercentPeopleVaccinated;
+CREATE TABLE PercentPeopleVaccinated (
+continent VARCHAR(255),
+location VARCHAR(255),
+date DATETIME,
+population INT,
+new_vaccinations INT,
+RollingPeopleVaccinated INT
+);
+
+INSERT INTO PercentPeopleVaccinated
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(vac.new_vaccinations, UNSIGNED)) 
+OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS RollingPeopleVaccinated
+FROM portfolio_project.coviddeathscsv AS dea
+INNER JOIN portfolio_project.covidvaccinationscsv AS vac 
+ON dea.location=vac.location
+AND dea.date=vac.date
+WHERE dea.continent IS NOT NULL;
+
+SELECT *, (RollingPeopleVaccinated/population)*100 AS PercentagePeopleVaccinated 
+FROM PercentPeopleVaccinated
+ORDER BY 2, 3;
+
+
+-- Creating Views
+
+DROP VIEW IF EXISTS GlobalTotalCases;
+CREATE VIEW GlobalTotalCases
+AS
+SELECT SUM(new_cases) AS GlobalTotalCases
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL;
+
+DROP VIEW IF EXISTS GlobalTotalDeaths;
+CREATE VIEW GlobalTotalDeaths
+AS
+SELECT SUM(CAST(new_deaths AS UNSIGNED)) AS GlobalTotalDeaths
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL;
+
+
+CREATE VIEW GlobalDeathPercentaje
+AS
+SELECT SUM(new_cases) AS GlobalTotalCases, SUM(CAST(new_deaths AS UNSIGNED)) AS GlobalTotalDeaths
+, ((SUM(CAST(new_deaths AS UNSIGNED)))/(SUM(new_cases)))*100 AS GlobalDeathPercentage
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL
+ORDER BY 1, 2;
+
+
+CREATE VIEW PercentPopulationInfected
+AS
+SELECT location, date, population, (CAST(total_cases AS UNSIGNED)) AS TotalCases
+, (SUM((CAST(total_cases AS UNSIGNED))/population))*100 AS PercentPopulationInfected
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL
+ORDER BY 1, 2;
+
+CREATE VIEW HighestInfectionRatePerCountry
+AS
+SELECT location, population, MAX(CAST(total_cases AS UNSIGNED)) AS HighestInfectionCount
+, (MAX((CAST(total_cases AS UNSIGNED))/population))*100 AS PercentPopulationInfected
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL
+GROUP BY location, population
+ORDER BY PercentPopulationInfected DESC;
+
+CREATE VIEW HighestDeathRatePerCountry
+AS
+SELECT location, MAX(CAST(total_deaths AS UNSIGNED)) AS TotalDeathCount
+FROM portfolio_project.coviddeathscsv
+WHERE continent IS NOT NULL
+GROUP BY location
+ORDER BY TotalDeathCount DESC;
