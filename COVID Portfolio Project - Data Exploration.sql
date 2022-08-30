@@ -99,7 +99,7 @@ WHERE dea.continent IS NOT NULL
 ORDER BY 2, 3;
 
 
--- Using CTE
+-- Using CTE to perform Calculation on Partition By in previous query
 
 WITH PopvsVac (continent, location, date, population, new_vaccinations, RollingPeopleVaccinated)
 AS
@@ -118,7 +118,7 @@ FROM PopvsVac
 ORDER BY 2, 3;
 
 
--- Using Temp Table
+-- Using Temp Table to perform Calculation on Partition By in previous query
 
 
 DROP TABLE IF EXISTS PercentPeopleVaccinated;
