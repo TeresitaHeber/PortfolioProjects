@@ -68,7 +68,6 @@ FROM portfolio_project.coviddeathscsv
 WHERE continent IS NOT NULL;
 
 
-
 -- Global numbers: Total deaths
 
 SELECT SUM(CAST(new_deaths AS UNSIGNED)) AS GlobalTotalDeaths
